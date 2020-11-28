@@ -241,7 +241,7 @@ runci()
 {
     local commit="$1"
     local builddir="$commit"
-    local score=0
+    local -i score=0
     local notify=OWNER
 
     # `builddir' also serves as a lock, preventing multiple concurrent builds
