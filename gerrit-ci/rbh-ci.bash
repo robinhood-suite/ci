@@ -80,12 +80,14 @@ positional parameters:
 
 optional parameters:
     -b, --branch BRANCH    the branch of PROJECT where the change should be
+                           (default: %s)
     -g, --gerrit INSTANCE  the instance of gerrit to connect to
-                           (eg. review.gerrithub.io)
+                           (default: %s)
     -h, --help             show this message and exit
     --persist              keep the build directory and its content
     -p, --project PROJECT  the name of the project where the change should be
-' "$program"
+                           (default: %s)
+' "$program" "${instance:-none}" "${branch:-none}" "${project:-none}"
 }
 
 ################################################################################
