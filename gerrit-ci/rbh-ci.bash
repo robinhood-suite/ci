@@ -9,8 +9,8 @@
 ################################################################################
 
 instance=review.gerrithub.io
-project=cea-hpc/robinhood
-branch=v4
+project=cea-hpc/librobinhood
+branch=main
 
 ################################################################################
 #                                  UTILITIES                                   #
