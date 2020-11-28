@@ -257,7 +257,7 @@ runci()
     exec >build.stdout
     exec 2>build.stderr
 
-    TMPDIR="$PWD" "$ci" "$commit"
+    "$ci" "$commit"
     )
 
     case "$?" in
