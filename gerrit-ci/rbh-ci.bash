@@ -11,6 +11,7 @@
 instance=review.gerrithub.io
 project=cea-hpc/librobinhood
 branch=main
+persist=false
 
 ################################################################################
 #                                  UTILITIES                                   #
@@ -82,6 +83,7 @@ optional parameters:
     -g, --gerrit INSTANCE  the instance of gerrit to connect to
                            (eg. review.gerrithub.io)
     -h, --help             show this message and exit
+    --persist              keep the build directory and its content
     -p, --project PROJECT  the name of the project where the change should be
 ' "$program"
 }
@@ -110,6 +112,9 @@ while [[ $# -gt 0 ]]; do
         [[ $# -gt 1 ]] || die $EX_USAGE "missing PROJECT after %s" "$1"
         project="$2"
         shift
+        ;;
+    --persist)
+        persist=true
         ;;
     -[^-]|--?*)
         die 64 "unknown option '%s'" "$1"
@@ -150,7 +155,7 @@ set -o errexit # <=> set -e
 
 # The build will run in a temporary directory
 builddir=$(mktemp --directory --tmpdir "$program"-build-"${1/\//@}"-XXXXXXXXX)
-trap -- "rm -rf '$builddir'" EXIT
+$persist || trap -- "rm -rf '$builddir'" EXIT
 cd "$builddir"
 
 # Fetch the change
