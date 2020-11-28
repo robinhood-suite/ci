@@ -67,6 +67,49 @@ id2refname()
             ".[].revisions | to_entries | $revfilter | .value.ref"
 }
 
+c_args()
+{
+    meson introspect --buildoptions "$@" |
+        jq '.[] | select(.name == "c_args") | .value | join(" ")'
+}
+
+gcc_robot_comments()
+{
+    local id="$(gcc --version | head -n 1)"
+    local runid="${builddir##*-}"
+
+    jq -nR 'def trimpath: . | sub("^(../)*"; "");
+        [inputs | fromjson? | .[]] | reduce .[] as $diagnostic ({};
+            $diagnostic.locations[0]? as $location
+          | ($location.caret.file | trimpath) as $path
+          | .[$path] |= (. + [{
+                "path": $path,
+                "range": ($location | {
+                    "start_line": .caret.line,
+                    "start_character": (.caret.column - 1),
+                    "end_line": (.finish.line // .caret.line),
+                    "end_character": (.finish.column // .caret.column)
+                }),
+                "robot_id": "'"$id"'",
+                "robot_run_id": "'"$runid"'",
+                "message": $diagnostic.message,
+                "fix_suggestions": (if $diagnostic.fixits then [{
+                    "description": "(suggest)",
+                    "replacements": [$diagnostic.fixits | .[] | {
+                        "path": .start.file | trimpath,
+                        "range": {
+                            "start_line": .start.line,
+                            "start_character": (.start.column - 1),
+                            "end_line": .next.line,
+                            "end_character": (.next.column - 1)
+                        },
+                        "replacement": .string
+                    }]
+                }] else [] end)
+            }])
+        )'
+}
+
 usage()
 {
     printf 'usage: %s [-h] [-g INSTANCE] [-p PROJECT] [-b BRANCH] {COMMIT | URL | CHANGE}
@@ -170,6 +213,15 @@ git log -n 1
 
 # Build it
 CC=gcc meson -Db_sanitize=address,undefined -Dc_args=-fno-sanitize=all gcc-build
+if [[ -e /proc/self/fd/3 ]]; then
+    (
+    c_args=$(c_args gcc-build)
+    trap -- "meson configure -Dc_args='$c_args' gcc-build" EXIT
+
+    meson configure -Dc_args="$c_args -fdiagnostics-format=json" gcc-build
+    ninja -C gcc-build | gcc_robot_comments >&3
+    )
+fi
 ninja -C gcc-build/ test
 
 CC=clang meson -Db_sanitize=address,undefined -Dc_args=-fno-sanitize=all \
