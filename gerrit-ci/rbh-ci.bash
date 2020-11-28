@@ -169,9 +169,12 @@ git switch --detach FETCH_HEAD
 git log -n 1
 
 # Build it
-meson --buildtype=release -Db_sanitize=address,undefined builddir
-ninja -C builddir/ test
-ninja -C builddir/ scan-build
+CC=gcc meson -Db_sanitize=address,undefined -Dc_args=-fno-sanitize=all gcc-build
+ninja -C gcc-build/ test
+ninja -C gcc-build/ scan-build
+
+meson --buildtype=release release-build
+ninja -C release-build/ test
 
 # Build the documentation
 find -name '*.rst' -print0 |
