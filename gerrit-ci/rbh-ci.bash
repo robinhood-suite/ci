@@ -171,7 +171,11 @@ git log -n 1
 # Build it
 CC=gcc meson -Db_sanitize=address,undefined -Dc_args=-fno-sanitize=all gcc-build
 ninja -C gcc-build/ test
-ninja -C gcc-build/ scan-build
+
+CC=clang meson -Db_sanitize=address,undefined -Dc_args=-fno-sanitize=all \
+    -Db_lundef=false clang-build
+ninja -C clang-build/ test
+ninja -C clang-build/ scan-build
 
 meson --buildtype=release release-build
 ninja -C release-build/ test
