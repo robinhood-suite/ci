@@ -55,8 +55,8 @@ sshconfig()
 
 unverified()
 {
-    curl --silent "$url/changes/?q=$filter&o=CURRENT_REVISION" | tail -n +2 |
-        jq --raw-output '.[].current_revision'
+    curl --silent "$url/changes/?q=$filter+owner:$sshuser&o=CURRENT_REVISION" |
+        tail -n +2 | jq --raw-output '.[].current_revision'
 }
 
 usage()
@@ -189,18 +189,23 @@ gerritwatch()
                 .change |
                 .project == "'"$project"'" and .branch == "'"$branch"'"
             ) | select(
+                .author.username == "'"$sshuser"'"
+            ) | select(
                 .approvals | .[] |
-                .type == "Verified" and .oldValue != "0" and .value == "0" and
-                    .by.username == "'"$sshuser"'"
+                .type == "Verified" and .oldValue != "0" and .value == "0"
             ) | .patchSet.revision'
         [patchset-created]='select(
-                .change |
-                .project == "'"$project"'" and .branch == "'"$branch"'"
+                .uploader.username == "'"$sshuser"'" and (
+                    .change
+                  | .project == "'"$project"'" and .branch == "'"$branch"'"
+                )
             ) | .patchSet.revision'
-        [ref-updated]='.refUpdate | select(.project == "'"$project"'") |
-            select(.refName | test("meta") | not) |
-            select(.refName | test("version") | not) |
-            .newRev | select(. | test("^0+$") | not)'
+        [ref-updated]='select(
+                .submitter.username == "'"$sshuser"'"
+            ) | .refUpdate | select(.project == "'"$project"'")
+              | select(.refName | test("meta") | not)
+              | select(.refName | test("version") | not)
+              | .newRev | select(. | test("^0+$") | not)'
     )
 
     gerrit stream-events -s comment-added -s patchset-created \
