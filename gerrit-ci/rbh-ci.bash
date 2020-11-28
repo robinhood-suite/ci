@@ -172,3 +172,8 @@ git log -n 1
 meson --buildtype=release -Db_sanitize=address,undefined builddir
 ninja -C builddir/ test
 ninja -C builddir/ scan-build
+
+# Build the documentation
+find -name '*.rst' -print0 |
+    xargs --null --no-run-if-empty --max-args 1 -- bash -c \
+        'rst2html --exit-status=2 "$0" > "${0%.rst}".html'
