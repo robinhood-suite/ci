@@ -1,6 +1,6 @@
 #! /bin/bash
 #
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: LGPL-3.0-or-later
 #
 # author: Quentin Bouget <quentin.bouget@cea.fr>
 
